@@ -1,0 +1,51 @@
+id_produk,nama_produk,kategori,harga_beli,harga_jual,stok,min_stok
+P001,Indomie Goreng,Makanan,2800,3500,100,10
+P002,Teh Botol Minuman,Minuman,4000,6000,50,8
+P003,Roti Cokelat,Makanan,5000,7500,20,5
+P004,Kaos Polos Cotton Combed 30s,Pakaian,32000,55000,120,20
+P005,Kaos Sablon Custom,Pakaian,45000,75000,60,15
+P006,Kemeja Flanel Lengan Panjang,Pakaian,78000,135000,40,10
+P007,Kemeja Oxford Slim Fit,Pakaian,95000,165000,35,10
+P008,Polo Shirt Lacoste Basic,Pakaian,65000,115000,55,15
+P009,Hoodie Fleece Premium,Pakaian,120000,210000,30,10
+P010,Sweater Rajut Oversize,Pakaian,98000,175000,28,10
+P011,Jaket Bomber Pria,Pakaian,145000,250000,22,8
+P012,Jaket Denim Classic,Pakaian,165000,285000,18,8
+P013,Cardigan Wanita Knit,Pakaian,89000,155000,25,10
+P014,Celana Chino Panjang,Pakaian,92000,160000,45,12
+P015,Celana Jeans Slim Pria,Pakaian,135000,225000,38,10
+P016,Celana Jogger Sport,Pakaian,78000,140000,50,15
+P017,Celana Pendek Cargo,Pakaian,72000,125000,42,12
+P018,Rok Plisket Wanita,Pakaian,68000,120000,33,10
+P019,Legging Sport Wanita,Pakaian,45000,85000,60,20
+P020,Dress Midi Casual,Pakaian,112000,195000,24,8
+P021,Gamis Bordir Wanita,Pakaian,158000,275000,16,6
+P022,Kemeja Batik Pria,Pakaian,105000,185000,30,10
+P023,Blouse Lengan Balon,Pakaian,82000,145000,27,10
+P024,Sepatu Sneakers Pria,Alas Kaki,215000,375000,20,6
+P025,Sepatu Slip On Wanita,Alas Kaki,165000,295000,18,6
+P026,Sepatu Formal Pantofel,Alas Kaki,235000,410000,12,5
+P027,Sandal Kulit Pria,Alas Kaki,85000,155000,35,10
+P028,Sandal Jepit Premium,Alas Kaki,25000,45000,100,25
+P029,Tas Ransel Laptop 15 inch,Tas,185000,320000,22,8
+P030,Tas Selempang Kanvas,Tas,78000,140000,34,10
+P031,Tas Tote Bag Wanita,Tas,92000,165000,28,10
+P032,Dompet Kulit Pria,Tas,65000,125000,45,12
+P033,Dompet Wanita Zip,Tas,55000,105000,50,15
+P034,Topi Baseball Cap,Aksesoris,35000,65000,70,20
+P035,Topi Bucket Hat,Aksesoris,45000,82000,48,15
+P036,Ikat Pinggang Kulit,Aksesoris,58000,110000,40,12
+P037,Kacamata Sunglasses Polarized,Aksesoris,88000,165000,26,8
+P038,Jam Tangan Digital Sport,Aksesoris,125000,230000,20,6
+P039,Jam Tangan Kulit Classic,Aksesoris,175000,315000,14,5
+P040,Gelang Titanium Pria,Aksesoris,42000,85000,55,15
+P041,Kalung Stainless Wanita,Aksesoris,38000,78000,60,18
+P042,Cincin Couple Titanium,Aksesoris,65000,135000,30,10
+P043,Anting Korean Style,Aksesoris,28000,58000,75,20
+P044,Socks Ankle Premium (3 pasang),Aksesoris,35000,68000,90,25
+P045,Sarung Tangan Motor,Aksesoris,45000,88000,52,15
+P046,Scarf / Hijab Voal,Aksesoris,55000,105000,44,12
+P047,Syal Rajut Winter,Aksesoris,62000,118000,30,10
+P048,Masker Kain 3ply (5 pcs),Aksesoris,22000,45000,120,30
+P049,Powerbank 10000mAh,Elektronik,145000,265000,18,6
+P050,Charger Fast Charging 20W,Elektronik,68000,125000,40,12

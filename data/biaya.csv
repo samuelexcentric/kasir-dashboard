@@ -1,0 +1,6 @@
+id_biaya,tanggal,kategori,keterangan,jumlah
+BYR001,2026-10-01,Modal Awal,Modal buka toko,5000000
+BYR002,2026-10-05,Listrik,Token listrik,200000
+BYR003,2026-10-05,Gaji,Gaji kasir,150000
+BYR004,2026-10-06,Sewa,Sewa kios bulan Oktober,1500000
+BYR005,2026-10-06,Perlengkapan,Plastik kemasan + nota,85000
