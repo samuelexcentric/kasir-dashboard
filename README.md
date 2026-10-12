@@ -2,6 +2,8 @@
 
 Streamlit POS application for cashier transactions, stock, finances, and shift summaries.
 
+Repository: https://github.com/samuelexcentric/kasir-dashboard
+
 ## Run locally
 
 ```bash
@@ -16,9 +18,10 @@ The app includes demo records under `data/`. Demo usernames: `admin`, `ani`, `bu
 ## Deploy on Streamlit Community Cloud
 
 1. Push this project folder to a GitHub repository. Keep `app.py`, `requirements.txt`, `core.py`, `services.py`, `db_init.py`, `utils.py`, `.streamlit/config.toml`, and `data/` in the repository.
-2. In Streamlit Community Cloud, create an app from the repository and select `app.py` as the entrypoint.
-3. Choose Python 3.12 in Advanced settings.
-4. Deploy.
+2. Open https://share.streamlit.io and sign in with GitHub.
+3. Choose **Create app** and pick `samuelexcentric/kasir-dashboard`, branch `main`, main file `app.py`.
+4. Choose Python 3.12 in Advanced settings.
+5. Deploy.
 
 This demo uses CSV files as its record source. Streamlit Community Cloud filesystems can be ephemeral, so CSV/SQLite edits may not survive restarts or redeploys. Use a hosted database for production data. Do not commit real customer records, credentials, or `.streamlit/secrets.toml`.
 
