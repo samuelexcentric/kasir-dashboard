@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-APP_DIR="/home/shersamsam/dashboard"
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 URL="http://localhost:8501"
 
 cd "$APP_DIR" || exit 1
