@@ -124,6 +124,21 @@ def produk_perlu_restock(produk: list[dict]) -> list[dict]:
     return out
 
 
+def produk_stok_habis(produk: list[dict]) -> list[dict]:
+    """Products whose stock has hit zero, sorted by name."""
+    out = [p for p in produk if int(p["stok"]) <= 0]
+    out.sort(key=lambda x: str(x["nama_produk"]))
+    return out
+
+
+def produk_baru_habis(
+    produk: list[dict], sudah_dinotifikasi: set[str] | None = None
+) -> list[dict]:
+    """Out-of-stock products not yet alerted, so a message is sent once."""
+    sudah = set(sudah_dinotifikasi or ())
+    return [p for p in produk_stok_habis(produk) if p["id_produk"] not in sudah]
+
+
 def pesan_whatsapp_restock(produk_restock: list[dict]) -> str:
     lines = [f"Stok menipis / habis:"]
     for p in produk_restock:

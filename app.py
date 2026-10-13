@@ -8,6 +8,7 @@ import streamlit as st
 
 import core
 import services
+import whatsapp_alert
 
 st.set_page_config(page_title="Dashboard Kasir", layout="wide")
 
@@ -15,6 +16,27 @@ if "user" not in st.session_state:
     st.session_state.user = None
     st.session_state.shift_start = None
     st.session_state.shift_notified = False
+    st.session_state.stok_notified = set()
+
+
+def kirim_notifikasi_stok_habis(data):
+    """Alert the owner once per product that just ran out of stock."""
+    if not whatsapp_alert.config_status()["configured"]:
+        return []
+    produk = data["produk"].to_dict(orient="records")
+    baru = core.produk_baru_habis(
+        produk, st.session_state.get("stok_notified", set())
+    )
+    if not baru:
+        return []
+    try:
+        whatsapp_alert.notify_restock(baru)
+    except whatsapp_alert.WhatsAppError as exc:
+        st.warning(f"Notifikasi WhatsApp gagal: {exc}")
+        return []
+    st.session_state.stok_notified.update(p["id_produk"] for p in baru)
+    st.toast(f"Notifikasi WhatsApp terkirim: {len(baru)} produk habis")
+    return baru
 
 def login_page():
     st.title("Login Kasir")
@@ -107,6 +129,7 @@ def page_pos(data):
                     f"Transaksi {result['id_transaksi']} tersimpan. "
                     f"Total Rp {result['total_bayar']:,}"
                 )
+                kirim_notifikasi_stok_habis(services.load_all())
                 time.sleep(1)
                 st.rerun()
             except ValueError as e:
@@ -126,9 +149,22 @@ def page_stok(data):
     low = core.produk_perlu_restock(data["produk"].to_dict(orient="records"))
     if low:
         st.warning(f"{len(low)} produk perlu restock")
+        status = whatsapp_alert.config_status()
+        if not status["configured"]:
+            st.caption(
+                "WhatsApp belum dikonfigurasi. Isi `WHATSAPP_TOKEN`, "
+                "`WHATSAPP_PHONE_NUMBER_ID`, dan `WHATSAPP_RECIPIENT` di secrets."
+            )
         if st.button("Kirim peringatan WhatsApp"):
-            st.info("Pesan akan dikirim ke WhatsApp pemilik:\n\n"
-                    + core.pesan_whatsapp_restock(low))
+            try:
+                whatsapp_alert.notify_restock(low)
+                st.success(f"Peringatan restock terkirim ke {status['recipient']}")
+            except whatsapp_alert.WhatsAppError as e:
+                st.error(f"Gagal kirim: {e}")
+        st.text_area(
+            "Pratinjau pesan", core.pesan_whatsapp_restock(low),
+            height=140, disabled=True,
+        )
     else:
         st.success("Semua stok aman")
     st.dataframe(
@@ -199,22 +235,35 @@ def page_finansial(data, role):
 def page_pdf(data, role):
     st.subheader("Export PDF & WhatsApp")
     ring = services.ringkasan_finansial(data)
+    status = whatsapp_alert.config_status()
+    pdf_bytes = None
     if st.button("Buat PDF", type="primary"):
         try:
             from utils import create_financial_pdf
             pdf_bytes = create_financial_pdf(ring)
-            st.download_button(
-                "Unduh laporan.pdf",
-                data=pdf_bytes,
-                file_name="laporan.pdf",
-                mime="application/pdf",
-            )
+            st.session_state["pdf_bytes"] = pdf_bytes
             st.success("PDF siap diunduh")
         except Exception as e:
             st.error(f"PDF gagal: {e}")
+    if st.session_state.get("pdf_bytes"):
+        st.download_button(
+            "Unduh laporan.pdf",
+            data=st.session_state["pdf_bytes"],
+            file_name="laporan.pdf",
+            mime="application/pdf",
+        )
+
+    if not status["configured"]:
+        st.caption(
+            "Kirim WhatsApp butuh `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, "
+            "dan `WHATSAPP_RECIPIENT` di secrets."
+        )
     if st.button("Kirim ke WhatsApp"):
-        st.info("WhatsApp: kirim laporan.pdf ke nomor pemilik "
-                "(butuh wa.me link / WhatsApp Business API)")
+        try:
+            whatsapp_alert.send_financial_pdf(ring)
+            st.success(f"laporan.pdf terkirim ke {status['recipient']}")
+        except whatsapp_alert.WhatsAppError as e:
+            st.error(f"Gagal kirim: {e}")
 
 
 def page_shift(data):
