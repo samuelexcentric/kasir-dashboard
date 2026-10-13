@@ -29,9 +29,44 @@ Google Sheets is not configured in this version. WhatsApp notifications use the 
 
 ## WhatsApp setup (Meta WhatsApp Cloud API)
 
-1. Create a Meta app with the WhatsApp product and note the **Phone number ID** and a **permanent access token**.
-2. Add the recipient number as a verified test/production recipient.
-3. Create `.streamlit/secrets.toml` (see `.streamlit/secrets.toml.example`):
+You need three values from Meta. Steps change occasionally, but the current flow is:
+
+### Step 1 - Create the app
+
+1. Open https://developers.facebook.com/apps and sign in with a Facebook account.
+2. **Create app** -> use case **Other** -> app type **Business**.
+3. In the app dashboard, find the **WhatsApp** product and click **Set up**.
+4. Meta provisions a free **test sender number** you can use immediately.
+
+### Step 2 - Copy the Phone number ID
+
+In **WhatsApp -> API Setup**, look at the **From** dropdown. Below it is a numeric **Phone number ID** (about 15-17 digits). Copy that value.
+
+> Common mistake: this is **not** your phone number. It is an internal Meta ID.
+
+### Step 3 - Add the recipient number
+
+Still on **API Setup**, under **To** add the WhatsApp number that should receive alerts. While the app is in test mode only numbers you add here can receive messages.
+
+### Step 4 - Get an access token
+
+- **Quick test:** click **Generate access token** on the API Setup page. It starts with `EAA` but **expires after 24 hours** - fine for a first test, not for production.
+- **Production (recommended):** create a permanent System User token:
+  1. Open https://business.facebook.com/settings -> **Users -> System users**.
+  2. **Add** a system user, role **Admin**.
+  3. Select it -> **Assign assets**: your app (Full control) and your WhatsApp account (Full control).
+  4. **Generate new token**, set expiry **Never**, and grant `whatsapp_business_messaging` and `whatsapp_business_management`.
+  5. Copy the token.
+
+### Step 5 - Verify locally before deploying
+
+Put the three values in `.streamlit/secrets.toml` (copy from `.streamlit/secrets.toml.example`), then run:
+
+```bash
+python check_whatsapp.py              # shows which values are set (masked)
+python check_whatsapp.py --send-test  # sends a real test text message
+python check_whatsapp.py --send-pdf   # sends a sample report PDF
+```
 
 ```toml
 WHATSAPP_TOKEN = "your-access-token"
@@ -39,9 +74,11 @@ WHATSAPP_PHONE_NUMBER_ID = "your-phone-number-id"
 WHATSAPP_RECIPIENT = "628xxxxxxxxxx"
 ```
 
-On Streamlit Community Cloud, paste the same three keys into the app's **Secrets** settings. For local runs you can also export them as environment variables instead of using secrets.
+### Step 6 - Add the secrets to Streamlit Cloud
 
-Out-of-stock alerts fire automatically after a transaction that drives a product to zero stock (once per product per session). The **Stok** page has a manual restock alert button, and the admin **Export PDF** page can send `laporan.pdf` straight to WhatsApp.
+Open your app on share.streamlit.io -> **Settings -> Secrets** and paste the same three lines. Save; the app restarts and WhatsApp turns on. Secrets live only on Streamlit's servers and are never committed to Git.
+
+Out-of-stock alerts fire automatically after a transaction that drives a product to zero stock (once per product per session). The **Stok** page has a manual restock alert button, and the admin **Export PDF** page can send `laporan.pdf` straight to WhatsApp. If the secrets are missing the app still runs; the WhatsApp buttons just explain that setup is incomplete.
 
 ## Repository conventions
 
