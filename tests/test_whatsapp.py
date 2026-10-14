@@ -59,7 +59,8 @@ def test_send_text_rejects_empty_body(recorder):
     assert recorder.json_calls == []
 
 
-def test_send_text_requires_credentials(recorder):
+def test_send_text_requires_credentials(recorder, monkeypatch):
+    monkeypatch.setattr(whatsapp_alert, "_read_setting", lambda key: None)
     with pytest.raises(whatsapp_alert.WhatsAppConfigError):
         whatsapp_alert.send_text("6289515780328", "Halo", token="", phone_number_id="")
     assert recorder.json_calls == []

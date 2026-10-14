@@ -5,3 +5,22 @@ __pycache__/
 database.db
 *.pdf
 .streamlit/secrets.toml
+
+# === Meta / WhatsApp credentials — JANGAN pernah di-commit ===
+meta_whatsapp_creds.json
+meta_system_user_token.txt
+*_creds.json
+*_credentials.json
+meta_*_token*.txt
+fb_cookies.json
+*_cookies.json
+
+# === Secret umum ===
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Runtime state (anti-spam ledger for stock alerts) — machine-specific
+data/stok_notified.json

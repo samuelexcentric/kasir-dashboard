@@ -124,6 +124,44 @@ def buat_transaksi(
     }
 
 
+def update_stok(perubahan: dict[str, int]) -> dict:
+    """Set absolute stock levels for the given products.
+
+    perubahan: {'id_produk': new_stock, ...}. Only products that already exist
+    are written; negative values are rejected. Returns the number of rows
+    changed plus a per-product before/after record for the UI to report.
+    """
+    if not perubahan:
+        return {"diubah": 0, "detail": []}
+
+    _reload()
+    produk_df = pd.read_csv(DATA_DIR / "produk.csv")
+    ada = set(produk_df["id_produk"])
+    detail = []
+
+    for pid, stok_baru in perubahan.items():
+        if pid not in ada:
+            raise ValueError(f"produk {pid} tidak ditemukan")
+        stok_baru = int(stok_baru)
+        if stok_baru < 0:
+            raise ValueError(f"stok {pid} tidak boleh negatif")
+
+    for pid, stok_baru in perubahan.items():
+        mask = produk_df["id_produk"] == pid
+        lama = int(produk_df.loc[mask, "stok"].iloc[0])
+        produk_df.loc[mask, "stok"] = int(stok_baru)
+        if lama != int(stok_baru):
+            detail.append(
+                {"id_produk": pid, "stok_lama": lama, "stok_baru": int(stok_baru)}
+            )
+
+    if detail:
+        produk_df.to_csv(DATA_DIR / "produk.csv", index=False)
+        db_init.import_csv_to_db(reset=False)
+
+    return {"diubah": len(detail), "detail": detail}
+
+
 def tambah_biaya(tanggal: str, kategori: str, keterangan: str, jumlah: int):
     _reload()
     biaya_df = pd.read_csv(DATA_DIR / "biaya.csv")

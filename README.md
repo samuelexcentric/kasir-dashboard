@@ -69,16 +69,18 @@ python check_whatsapp.py --send-pdf   # sends a sample report PDF
 ```
 
 ```toml
-WHATSAPP_TOKEN = "your-access-token"
-WHATSAPP_PHONE_NUMBER_ID = "your-phone-number-id"
-WHATSAPP_RECIPIENT = "628xxxxxxxxxx"
+whatsapp_token = "your-access-token"
+whatsapp_phone_number_id = "your-phone-number-id"
+whatsapp_recipient = "628xxxxxxxxxx"
 ```
+
+Note: `st.secrets` is case-sensitive and the code reads these lowercase names. Environment variables use the uppercase form (`WHATSAPP_TOKEN`, ...); only the secrets file uses lowercase.
 
 ### Step 6 - Add the secrets to Streamlit Cloud
 
 Open your app on share.streamlit.io -> **Settings -> Secrets** and paste the same three lines. Save; the app restarts and WhatsApp turns on. Secrets live only on Streamlit's servers and are never committed to Git.
 
-Out-of-stock alerts fire automatically after a transaction that drives a product to zero stock (once per product per session). The **Stok** page has a manual restock alert button, and the admin **Export PDF** page can send `laporan.pdf` straight to WhatsApp. If the secrets are missing the app still runs; the WhatsApp buttons just explain that setup is incomplete.
+Low-stock alerts fire automatically on every dashboard load once a product's stock drops to 20 or below (configurable via `STOK_MENIPIS_THRESHOLD`), whichever way it changed - a sale on the Kasir page or a direct edit of `data/produk.csv`. Each product is alerted once until its stock recovers above the threshold. The **Stok** page has a manual restock alert button and an admin stock-edit form, and the admin **Export PDF** page can send `laporan.pdf` straight to WhatsApp. If the secrets are missing the app still runs; the WhatsApp buttons just explain that setup is incomplete.
 
 ## Repository conventions
 

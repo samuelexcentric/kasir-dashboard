@@ -108,6 +108,8 @@ def ringkasan_keuangan(
 
 STOK_LABELS = ["Aman", "Menipis", "Kritis"]
 
+STOK_MENIPIS_DEFAULT = 20
+
 
 def stok_status(stok: int, min_stok: int) -> str:
     if stok > min_stok:
@@ -131,6 +133,33 @@ def produk_stok_habis(produk: list[dict]) -> list[dict]:
     return out
 
 
+def produk_stok_menipis(
+    produk: list[dict], ambang: int = STOK_MENIPIS_DEFAULT
+) -> list[dict]:
+    """Products whose stock is at or below a fixed threshold, sorted by stock.
+
+    Uses a flat threshold (default 20) rather than each product's min_stok, so
+    a single rule covers the whole catalogue.
+    """
+    out = [p for p in produk if int(p["stok"]) <= int(ambang)]
+    out.sort(key=lambda x: (int(x["stok"]), str(x["nama_produk"])))
+    return out
+
+
+def produk_baru_menipis(
+    produk: list[dict],
+    sudah_dinotifikasi: set[str] | None = None,
+    ambang: int = STOK_MENIPIS_DEFAULT,
+) -> list[dict]:
+    """Low-stock products not yet alerted, so a message is sent once each."""
+    sudah = set(sudah_dinotifikasi or ())
+    return [
+        p
+        for p in produk_stok_menipis(produk, ambang)
+        if p["id_produk"] not in sudah
+    ]
+
+
 def produk_baru_habis(
     produk: list[dict], sudah_dinotifikasi: set[str] | None = None
 ) -> list[dict]:
@@ -140,10 +169,26 @@ def produk_baru_habis(
 
 
 def pesan_whatsapp_restock(produk_restock: list[dict]) -> str:
-    lines = [f"Stok menipis / habis:"]
-    for p in produk_restock:
-        lines.append(
-            f"- {p['nama_produk']} ({p['id_produk']}): "
-            f"sisa {p['stok']} (min {p['min_stok']})"
-        )
+    habis = [p for p in produk_restock if int(p["stok"]) <= 0]
+    menipis = [p for p in produk_restock if int(p["stok"]) > 0]
+
+    lines = ["*Peringatan Stok*"]
+    if habis:
+        lines.append("")
+        lines.append("*HABIS (stok 0):*")
+        for p in habis:
+            lines.append(
+                f"- {p['nama_produk']} ({p['id_produk']}): "
+                f"sisa 0 (min {p['min_stok']})"
+            )
+    if menipis:
+        lines.append("")
+        lines.append("*MENIPIS:*")
+        for p in menipis:
+            lines.append(
+                f"- {p['nama_produk']} ({p['id_produk']}): "
+                f"sisa {p['stok']} (min {p['min_stok']})"
+            )
+    lines.append("")
+    lines.append(f"Total {len(produk_restock)} produk perlu restock.")
     return "\n".join(lines)

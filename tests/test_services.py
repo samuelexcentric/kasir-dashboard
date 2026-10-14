@@ -132,3 +132,41 @@ def test_ringkasan_finansial_matches_core(fresh):
     assert ring["omzet"] == int(data["transaksi"]["total_bayar"].sum())
     assert ring["laba_bersih"] == ring["laba_kotor"] - ring["biaya_operasional"]
     assert ring["modal_awal"] == 5_000_000
+
+
+def test_update_stok_writes_new_level(fresh):
+    hasil = services.update_stok({"P001": 0})
+    assert hasil["diubah"] == 1
+    assert hasil["detail"][0]["stok_baru"] == 0
+    stok = int(services.load_all()["produk"].set_index("id_produk").loc["P001", "stok"])
+    assert stok == 0
+
+
+def test_update_stok_reports_no_change_for_same_value(fresh):
+    stok_lama = int(
+        services.load_all()["produk"].set_index("id_produk").loc["P001", "stok"]
+    )
+    hasil = services.update_stok({"P001": stok_lama})
+    assert hasil["diubah"] == 0
+
+
+def test_update_stok_rejects_unknown_product(fresh):
+    with pytest.raises(ValueError, match="produk"):
+        services.update_stok({"P999": 5})
+
+
+def test_update_stok_rejects_negative(fresh):
+    with pytest.raises(ValueError, match="negatif"):
+        services.update_stok({"P001": -1})
+
+
+def test_update_stok_multiple_products(fresh):
+    hasil = services.update_stok({"P001": 3, "P002": 4})
+    assert hasil["diubah"] == 2
+    data = services.load_all()["produk"].set_index("id_produk")
+    assert int(data.loc["P001", "stok"]) == 3
+    assert int(data.loc["P002", "stok"]) == 4
+
+
+def test_update_stok_empty_is_noop(fresh):
+    assert services.update_stok({}) == {"diubah": 0, "detail": []}

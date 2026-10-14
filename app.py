@@ -8,6 +8,7 @@ import streamlit as st
 
 import core
 import services
+import stok_notifier
 import whatsapp_alert
 
 st.set_page_config(page_title="Dashboard Kasir", layout="wide")
@@ -16,27 +17,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
     st.session_state.shift_start = None
     st.session_state.shift_notified = False
-    st.session_state.stok_notified = set()
 
-
-def kirim_notifikasi_stok_habis(data):
-    """Alert the owner once per product that just ran out of stock."""
-    if not whatsapp_alert.config_status()["configured"]:
-        return []
-    produk = data["produk"].to_dict(orient="records")
-    baru = core.produk_baru_habis(
-        produk, st.session_state.get("stok_notified", set())
-    )
-    if not baru:
-        return []
-    try:
-        whatsapp_alert.notify_restock(baru)
-    except whatsapp_alert.WhatsAppError as exc:
-        st.warning(f"Notifikasi WhatsApp gagal: {exc}")
-        return []
-    st.session_state.stok_notified.update(p["id_produk"] for p in baru)
-    st.toast(f"Notifikasi WhatsApp terkirim: {len(baru)} produk habis")
-    return baru
 
 def login_page():
     st.title("Login Kasir")
@@ -129,7 +110,6 @@ def page_pos(data):
                     f"Transaksi {result['id_transaksi']} tersimpan. "
                     f"Total Rp {result['total_bayar']:,}"
                 )
-                kirim_notifikasi_stok_habis(services.load_all())
                 time.sleep(1)
                 st.rerun()
             except ValueError as e:
@@ -139,21 +119,74 @@ def page_pos(data):
             st.rerun()
 
 
-def page_stok(data):
+def _form_edit_stok(data):
+    """Admin-only: adjust stock levels without touching the CSV by hand."""
+    limit = stok_notifier.ambang()
+    with st.expander("Edit stok (admin)"):
+        st.caption(
+            f"Ubah stok di sini. Notifikasi WhatsApp otomatis terkirim saat "
+            f"stok turun ke ≤ {limit}."
+        )
+        produk = data["produk"]
+        pilihan = st.multiselect(
+            "Produk yang diubah",
+            options=produk["id_produk"].tolist(),
+            format_func=lambda pid: (
+                f"{produk.loc[produk['id_produk'] == pid, 'nama_produk'].iloc[0]}"
+                f" ({pid}) – stok "
+                f"{int(produk.loc[produk['id_produk'] == pid, 'stok'].iloc[0])}"
+            ),
+        )
+        if not pilihan:
+            st.caption("Pilih satu atau beberapa produk untuk mengubah stoknya.")
+            return
+        with st.form("edit_stok_form"):
+            nilai = {}
+            for pid in pilihan:
+                row = produk[produk["id_produk"] == pid].iloc[0]
+                nilai[pid] = st.number_input(
+                    f"Stok baru – {row['nama_produk']} ({pid})",
+                    min_value=0, step=1, value=int(row["stok"]),
+                )
+            if st.form_submit_button("Simpan stok"):
+                try:
+                    hasil = services.update_stok(
+                        {pid: int(v) for pid, v in nilai.items()}
+                    )
+                except ValueError as e:
+                    st.error(str(e))
+                else:
+                    if hasil["diubah"]:
+                        st.success(f"{hasil['diubah']} produk diperbarui.")
+                    else:
+                        st.info("Tidak ada perubahan.")
+                    st.rerun()
+
+
+def page_stok(data, role):
     st.subheader("Stok Barang")
+
+    if role == "admin":
+        _form_edit_stok(data)
+
     produk = data["produk"].copy()
     produk["status"] = [
         core.stok_status(int(s), int(m))
         for s, m in zip(produk["stok"], produk["min_stok"])
     ]
-    low = core.produk_perlu_restock(data["produk"].to_dict(orient="records"))
+    limit = stok_notifier.ambang()
+    low = core.produk_stok_menipis(data["produk"].to_dict(orient="records"), limit)
+    st.caption(
+        f"Notifikasi WhatsApp otomatis dikirim saat stok ≤ {limit} "
+        f"(ubah lewat STOK_MENIPIS_THRESHOLD)."
+    )
     if low:
-        st.warning(f"{len(low)} produk perlu restock")
+        st.warning(f"{len(low)} produk stoknya ≤ {limit} (perlu restock)")
         status = whatsapp_alert.config_status()
         if not status["configured"]:
             st.caption(
-                "WhatsApp belum dikonfigurasi. Isi `WHATSAPP_TOKEN`, "
-                "`WHATSAPP_PHONE_NUMBER_ID`, dan `WHATSAPP_RECIPIENT` di secrets."
+                "WhatsApp belum dikonfigurasi. Isi `whatsapp_token`, "
+                "`whatsapp_phone_number_id`, dan `whatsapp_recipient` di secrets."
             )
         if st.button("Kirim peringatan WhatsApp"):
             try:
@@ -163,10 +196,10 @@ def page_stok(data):
                 st.error(f"Gagal kirim: {e}")
         st.text_area(
             "Pratinjau pesan", core.pesan_whatsapp_restock(low),
-            height=140, disabled=True,
+            height=180, disabled=True,
         )
     else:
-        st.success("Semua stok aman")
+        st.success(f"Semua stok aman (di atas {limit})")
     st.dataframe(
         produk[["id_produk", "nama_produk", "kategori", "stok",
                 "min_stok", "status"]],
@@ -255,8 +288,8 @@ def page_pdf(data, role):
 
     if not status["configured"]:
         st.caption(
-            "Kirim WhatsApp butuh `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, "
-            "dan `WHATSAPP_RECIPIENT` di secrets."
+            "Kirim WhatsApp butuh `whatsapp_token`, `whatsapp_phone_number_id`, "
+            "dan `whatsapp_recipient` di secrets."
         )
     if st.button("Kirim ke WhatsApp"):
         try:
@@ -290,6 +323,14 @@ else:
     st.title("Dashboard Kasir")
     data = services.load_all()
 
+    _baru_menipis = stok_notifier.check_and_notify(
+        data["produk"].to_dict(orient="records")
+    )
+    if _baru_menipis:
+        st.toast(
+            f"Notifikasi WhatsApp terkirim: {len(_baru_menipis)} produk stok menipis"
+        )
+
     menu = ["Kasir", "Stok", "Riwayat", "Finansial", "Shift"]
     if role == "admin":
         menu.append("Export PDF")
@@ -298,7 +339,7 @@ else:
     if choice == "Kasir":
         page_pos(data)
     elif choice == "Stok":
-        page_stok(data)
+        page_stok(data, role)
     elif choice == "Riwayat":
         page_riwayat(data)
     elif choice == "Finansial":

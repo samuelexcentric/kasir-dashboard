@@ -1,11 +1,12 @@
 """WhatsApp Cloud API client: stock alerts and PDF report delivery.
 
-Credentials are read from Streamlit secrets or environment variables and are
-never logged or included in error messages:
+Credentials are read from environment variables (UPPERCASE names) or from
+Streamlit secrets (LOWERCASE names — st.secrets is case-sensitive):
 
-    WHATSAPP_TOKEN
-    WHATSAPP_PHONE_NUMBER_ID
-    WHATSAPP_RECIPIENT
+    env:     WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_RECIPIENT
+    secrets: whatsapp_token / whatsapp_phone_number_id / whatsapp_recipient
+
+Values are never logged or included in error messages.
 """
 from __future__ import annotations
 
