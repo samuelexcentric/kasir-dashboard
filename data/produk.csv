@@ -1,10 +1,10 @@
 id_produk,nama_produk,kategori,harga_beli,harga_jual,stok,min_stok
-P001,Indomie Goreng,Makanan,2800,3500,100,10
+P001,Indomie Goreng,Makanan,2800,3500,92,10
 P002,Teh Botol Minuman,Minuman,4000,6000,50,8
 P003,Roti Cokelat,Makanan,5000,7500,20,5
 P004,Kaos Polos Cotton Combed 30s,Pakaian,32000,55000,120,20
 P005,Kaos Sablon Custom,Pakaian,45000,75000,60,15
-P006,Kemeja Flanel Lengan Panjang,Pakaian,78000,135000,40,10
+P006,Kemeja Flanel Lengan Panjang,Pakaian,78000,135000,39,10
 P007,Kemeja Oxford Slim Fit,Pakaian,95000,165000,35,10
 P008,Polo Shirt Lacoste Basic,Pakaian,65000,115000,55,15
 P009,Hoodie Fleece Premium,Pakaian,120000,210000,30,10
